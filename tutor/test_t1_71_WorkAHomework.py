@@ -376,7 +376,7 @@ class TestEpicName(unittest.TestCase):
     # Case C8367 - 006 - Student | Selecting a multiple choice answer activates
     # the Submit button
     @pytest.mark.skipif(str(8367) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_seleting_a_multiple_choice_activates_the_button_6367(self):
+    def test_student_seleting_multiple_choice_activates_the_button_6367(self):
         """Selecting a multiple choice answer activates the Submit button.
 
         Steps:
@@ -755,7 +755,7 @@ class TestEpicName(unittest.TestCase):
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         stop_point = len(sections)//2
 
-        for q in range(stop_point):
+        for _ in range(stop_point):
             try:
                 # if the question is two part must answer free response first
                 element = self.student.driver.find_element(
@@ -845,7 +845,7 @@ class TestEpicName(unittest.TestCase):
 
         sections = self.student.driver.find_elements(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
-        for q in range(len(sections)-1):
+        for _ in range(len(sections)-1):
             try:
                 # if the question is two part must answer free response first
                 element = self.student.driver.find_element(
@@ -1058,7 +1058,7 @@ class TestEpicName(unittest.TestCase):
 
         sections = self.student.driver.find_elements(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
-        for q in range(len(sections)-1):
+        for _ in range(len(sections)-1):
             try:
                 # if the question is two part must answer free response first
                 element = self.student.driver.find_element(
@@ -1151,7 +1151,7 @@ class TestEpicName(unittest.TestCase):
 
         sections = self.student.driver.find_elements(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
-        for q in range(len(sections)-1):
+        for _ in range(len(sections)-1):
             try:
                 # if the question is two part answer free response first
                 element = self.student.driver.find_element(
@@ -1237,7 +1237,7 @@ class TestEpicName(unittest.TestCase):
         homework.click()
         sections = self.student.driver.find_elements(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
-        for q in range(len(sections)-1):
+        for _ in range(len(sections)-1):
             try:
                 element = self.student.driver.find_element(
                     By.TAG_NAME, 'textarea')
