@@ -12,7 +12,6 @@ from random import randint
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as expect
 from staxing.assignment import Assignment
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 
@@ -102,10 +101,10 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'1.1': (2, 3), },
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
-        self.student.wait.until(
+        self.teacher.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"calendar-container")]')
             )
@@ -113,16 +112,12 @@ class TestWorkAHomework(unittest.TestCase):
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
             '//a[contains(@class,"homework")]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -149,7 +144,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw002'
+        assignment_name = 'hw002_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -160,22 +155,18 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name)
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+            '//span[contains(text(),"%s")]' % assignment_name)
+        Assignment.scroll_to(self.student.driver, homework)
         icon = self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH,
@@ -184,7 +175,7 @@ class TestWorkAHomework(unittest.TestCase):
             )
         )
         ActionChains(self.student.driver).move_to_element(icon).perform()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@id,"task-details-popover")]')
 
         self.ps.test_updates['passed'] = True
@@ -207,7 +198,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw003'
+        assignment_name = 'hw003_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -218,23 +209,19 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -242,7 +229,7 @@ class TestWorkAHomework(unittest.TestCase):
                  '//span[contains(@data-reactid,"breadcrumb-step-1")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[@data-question-number="2"]')
 
         self.ps.test_updates['passed'] = True
@@ -266,7 +253,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw004'
+        assignment_name = 'hw004_'  + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -277,30 +264,26 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         count = 0
         while True:
             try:
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 for i in 'hello':
                     element.send_keys(i)
@@ -338,7 +321,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw005'
+        assignment_name = 'hw005_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -349,31 +332,27 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         count = 0
         answer_text = "hello"
         while True:
             try:
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 for i in answer_text:
                     element.send_keys(i)
@@ -389,12 +368,12 @@ class TestWorkAHomework(unittest.TestCase):
                     print('no questions in this homework with free respnse')
                     raise Exception
                 sections[count].click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//div[@class="free-response" and ' +
             'contains(text(),"%s")]' % answer_text
         )
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
 
         self.ps.test_updates['passed'] = True
@@ -421,7 +400,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw006'
+        assignment_name = 'hw006_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -432,27 +411,23 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         try:
             # if the question is two part must answer free response before mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -469,13 +444,10 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.element_to_be_clickable(
@@ -508,7 +480,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw007'
+        assignment_name = 'hw007_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -519,34 +491,30 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//i[contains(@class,"icon-homework")]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
         try:
             # if the question is two part must answer free response before mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -563,13 +531,10 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -577,7 +542,7 @@ class TestWorkAHomework(unittest.TestCase):
             )
         ).click()
         # non immediate freedback goes straigt to the next question
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[@data-question-number="2"]')
 
         self.ps.test_updates['passed'] = True
@@ -602,7 +567,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw008'
+        assignment_name = 'hw008_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -613,32 +578,28 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         count = 0
         answer_text = "hello"
         while True:
             try:
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 for i in answer_text:
                     element.send_keys(i)
@@ -651,8 +612,8 @@ class TestWorkAHomework(unittest.TestCase):
                 sections[count].click()
         sections[count+1].click()
         sections[count].click()
-        self.student.driver.find_element(
-            By.XPATH, '//textarea[text()="'+answer_text+'"]')
+        self.student.find(
+            By.XPATH, '//textarea[text()="%s"]' % answer_text)
 
         self.ps.test_updates['passed'] = True
 
@@ -675,7 +636,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw009'
+        assignment_name = 'hw009_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -686,31 +647,27 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         count = 0
         while True:
             try:
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 for i in 'hello':
                     element.send_keys(i)
@@ -732,18 +689,15 @@ class TestWorkAHomework(unittest.TestCase):
             )
         )
         # answer multple choice
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         # check that it saved
         sections[count+1].click()
         sections[count].click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//div[contains(@data-reactid,"option-0")]' +
             '//div[contains(@class,"answer-checked")]'
@@ -774,7 +728,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw010'
+        assignment_name = 'hw010_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -785,33 +739,29 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         stop_point = len(sections)//2
 
         for _ in range(stop_point):
             try:
                 # if the question is two part must answer free response first
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 answer_text = "hello"
                 for i in answer_text:
@@ -823,19 +773,16 @@ class TestWorkAHomework(unittest.TestCase):
                 ).click()
             except NoSuchElementException:
                 pass
-            # answer the multiple choice  portion
+            # answer the multiple choice portion
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
             )
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.XPATH, '//div[@class="answer-letter"]')
-            self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();',
-                element
-            )
-            self.student.driver.execute_script('window.scrollBy(0, -150);')
+            Assignment.scroll_to(self.student.driver, element)
+            self.student.driver.execute_script('window.scrollBy(0, -100);')
             element.click()
             self.student.wait.until(
                 expect.visibility_of_element_located(
@@ -843,13 +790,13 @@ class TestWorkAHomework(unittest.TestCase):
                 )
             ).click()
         self.student.driver.execute_script('window.scrollTo(0,0)')
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//div[contains(@class,"course-name")]'
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
 
             '//span[contains(text(),"%s/%s answered")]' %
@@ -877,7 +824,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw011'
+        assignment_name = 'hw011_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -888,31 +835,27 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         for _ in range(len(sections)-1):
             try:
                 # if the question is two part must answer free response first
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 answer_text = "hello"
                 for i in answer_text:
@@ -924,13 +867,13 @@ class TestWorkAHomework(unittest.TestCase):
                 ).click()
             except NoSuchElementException:
                 pass
-            # answer the multiple choice  portion
+            # answer the multiple choice portion
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
             )
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.XPATH, '//div[@class="answer-letter"]')
             self.student.driver.execute_script(
                 'return arguments[0].scrollIntoView();',
@@ -943,9 +886,9 @@ class TestWorkAHomework(unittest.TestCase):
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@class,"completed-message")]')
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//h1[contains(text(),"You are done")]')
 
         self.ps.test_updates['passed'] = True
@@ -979,7 +922,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw012'
+        assignment_name = 'hw012_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -990,28 +933,24 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1029,7 +968,7 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
             'return arguments[0].scrollIntoView();',
@@ -1044,20 +983,16 @@ class TestWorkAHomework(unittest.TestCase):
         ).click()
         # go back to dashboard and reopen homework
         self.student.driver.execute_script('window.scrollTo(0,0)')
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//div[contains(@class,"course-name")]'
         ).click()
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//i[contains(@class,"icon-homework")]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         # reanswer mc portion
         self.student.wait.until(
@@ -1065,17 +1000,13 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH,
             '//div[contains(@class,"answers-answer") and ' +
             'not(contains(@class,"checked"))]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -1110,7 +1041,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw013'
+        assignment_name = 'hw013_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1121,74 +1052,56 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         for _ in range(len(sections)-1):
             try:
                 # if the question is two part must answer free response first
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 answer_text = "hello"
                 for i in answer_text:
                     element.send_keys(i)
-                self.student.driver.find_element(
+                self.student.find(
                     By.XPATH,
                     '//button/span[contains(text(),"Answer")]'
                 ).click()
             except NoSuchElementException:
                 pass
-            # answer the multiple choice  portion
+            # answer the multiple choice portion
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
             )
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.XPATH, '//div[@class="answer-letter"]')
-            self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();',
-                element
-            )
-
-            self.student.driver.execute_script('window.scrollBy(0, -150);')
+            Assignment.scroll_to(self.student.driver, element)
+            self.student.driver.execute_script('window.scrollBy(0, -100);')
             element.click()
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
-            # this is determined in making assignemnt now!
-            try:
-                # only click next question for assignemtns with immediate
-                # feedback
-                self.student.driver.find_element(
-                    By.XPATH,
-                    '//button/span[contains(text(),"Next Question")]'
-                ).click()
-            except:
-                pass
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@class,"completed-message")]')
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, "//a[contains(text(),'Back to Dashboard')]").click()
         assert('list' in self.student.current_url()), \
             'Not back at dashboard'
@@ -1220,7 +1133,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw012'
+        assignment_name = 'hw012_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1231,28 +1144,26 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+            '//span[contains(text(),"%s")]' % assignment_name)
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
 
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         for _ in range(len(sections)-1):
             try:
                 # if the question is two part answer free response first
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 answer_text = "hello"
                 for i in answer_text:
@@ -1264,26 +1175,25 @@ class TestWorkAHomework(unittest.TestCase):
                 ).click()
             except NoSuchElementException:
                 pass
-                # answer the multiple choice  portion
+            # answer the multiple choice portion
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
             )
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.XPATH, '//div[@class="answer-letter"]')
-            self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();', element)
-            self.student.driver.execute_script('window.scrollBy(0, -150);')
+            Assignment.scroll_to(self.student.driver, element)
+            self.student.driver.execute_script('window.scrollBy(0, -100);')
             element.click()
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@class,"completed-message")]')
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//h1[contains(text(),"You are done")]')
         self.ps.test_updates['passed'] = True
 
@@ -1307,7 +1217,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['tags'] = ['t1', 't1.71', 't1.71.015', '8376']
         self.ps.test_updates['passed'] = False
 
-        assignment_name = 'hw015'
+        assignment_name = 'hw015_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1318,64 +1228,56 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'non-immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -80);')
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
-        sections = self.student.driver.find_elements(
+        sections = self.student.find_all(
             By.XPATH, '//span[contains(@class,"breadcrumbs")]')
         for _ in range(len(sections)-1):
             try:
-                element = self.student.driver.find_element(
+                element = self.student.find(
                     By.TAG_NAME, 'textarea')
                 answer_text = "hello"
                 for i in answer_text:
                     element.send_keys(i)
-                self.student.driver.find_element(
+                self.student.find(
                     By.XPATH,
                     '//button/span[contains(text(),"Answer")]'
                 ).click()
             except NoSuchElementException:
                 pass
-            # answer the multiple choice  portion
+            # answer the multiple choice portion
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
             )
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.XPATH, '//div[@class="answer-letter"]')
-            self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();',
-                element
-            )
-
-            self.student.driver.execute_script('window.scrollBy(0, -150);')
+            Assignment.scroll_to(self.student.driver, element)
+            self.student.driver.execute_script('window.scrollBy(0, -100);')
             element.click()
             self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//a[contains(text(),"Back to Dashboard")]').click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//span[contains(text(),"%s/%s answered")]' %
             (len(sections) - 1, len(sections) - 1)
@@ -1462,19 +1364,14 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
             '//div[contains(@aria-hidden,"false")]' +
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//span[contains(text(),"0/")]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
-        ActionChains(self.student.driver).move_to_element(homework).perform()
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -1512,19 +1409,14 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
             '//div[contains(@aria-hidden,"false")]' +
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//span[contains(text(),"0/")]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
-        ActionChains(self.student.driver).move_to_element(homework).perform()
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -1533,7 +1425,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1550,20 +1442,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//button/span[contains(text(),"Next Question")]')
 
         self.ps.test_updates['passed'] = True
@@ -1597,19 +1486,14 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
             '//div[contains(@aria-hidden,"false")]' +
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//span[contains(text(),"0/")]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
-        ActionChains(self.student.driver).move_to_element(homework).perform()
+        Assignment.scroll_to(self.student.driver, homework)
         homework.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
@@ -1618,7 +1502,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1635,21 +1519,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@class,"question-feedback-content")]')
 
         self.ps.test_updates['passed'] = True
@@ -1683,18 +1563,15 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
             '//div[contains(@aria-hidden,"false")]' +
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//span[contains(text(),"0/")]'
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, homework)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
         self.student.wait.until(
@@ -1704,7 +1581,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1721,21 +1598,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//span[contains(@class,"breadcrumb")]' +
             '//i[contains(@class,"correct") or contains(@class,"incorrect")]'
@@ -1762,7 +1635,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw022'
+        assignment_name = 'hw022_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1773,23 +1646,20 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, homework)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
         self.ps.test_updates['passed'] = True
@@ -1816,7 +1686,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw023'
+        assignment_name = 'hw023_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1827,23 +1697,20 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, homework)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
         self.student.wait.until(
@@ -1853,7 +1720,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1870,21 +1737,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//button/span[contains(text(),"Next Question")]')
 
         self.ps.test_updates['passed'] = True
@@ -1911,7 +1774,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw0024'
+        assignment_name = 'hw0024_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -1922,23 +1785,20 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, homework)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
         self.student.wait.until(
@@ -1948,7 +1808,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -1965,21 +1825,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH, '//div[contains(@class,"question-feedback-content")]')
 
         self.ps.test_updates['passed'] = True
@@ -2006,7 +1862,7 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw025'
+        assignment_name = 'hw025_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
@@ -2017,23 +1873,20 @@ class TestWorkAHomework(unittest.TestCase):
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
                                         'status': 'publish',
-                                        'problems': {'ch1': 5},
+                                        'problems': {'1.1': 2, },
                                         'feedback': 'immediate'
                                     })
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
-        homework = self.student.driver.find_element(
+        homework = self.student.find(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
+            '//a[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"%s")]' % assignment_name
+            '//span[contains(text(),"%s")]' % assignment_name
         )
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            homework
-        )
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, homework)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
         self.student.wait.until(
@@ -2043,7 +1896,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         try:
             # if the question is two part must answer free response to get mc
-            element = self.student.driver.find_element(
+            element = self.student.find(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
@@ -2060,21 +1913,17 @@ class TestWorkAHomework(unittest.TestCase):
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        element = self.student.driver.find_element(
+        element = self.student.find(
             By.XPATH, '//div[@class="answer-letter"]')
-        self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();',
-            element
-        )
-
-        self.student.driver.execute_script('window.scrollBy(0, -150);')
+        Assignment.scroll_to(self.student.driver, element)
+        self.student.driver.execute_script('window.scrollBy(0, -100);')
         element.click()
         self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
-        self.student.driver.find_element(
+        self.student.find(
             By.XPATH,
             '//span[contains(@class,"breadcrumb")]' +
             '//i[contains(@class,"correct") or contains(@class,"incorrect")]'
