@@ -29,11 +29,12 @@ BROWSERS = json.loads(os.getenv('BROWSERS', basic_test_env))
 TESTS = os.getenv(
     'CASELIST',
     str([
-        8362, 8363, 8364, 8365, 8366,
-        8367, 8368, 8369, 8370, 8371,
-        8372, 8373, 8374, 8375, 8376,
-        8377, 8378, 8379, 8380, 8381,
-        8382, 8383, 8384, 8385, 8386
+        8362
+        # 8362, 8363, 8364, 8365, 8366,
+        # 8367, 8368, 8369, 8370, 8371,
+        # 8372, 8373, 8374, 8375, 8376,
+        # 8377, 8378, 8379, 8380, 8381,
+        # 8382, 8383, 8384, 8385, 8386
     ])
 )
 
@@ -58,6 +59,7 @@ class TestWorkAHomework(unittest.TestCase):
             # capabilities=self.desired_capabilities
         )
         self.teacher.login()
+        self.teacher.select_course(appearance='physics')
 
     def tearDown(self):
         """Test destructor."""
@@ -89,25 +91,31 @@ class TestWorkAHomework(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        assignment_name = 'hw001'
+        assignment_name = 'hw001_' + str(randint(100, 999))
         today = datetime.date.today()
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
-        end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
+        end = (today + datetime.timedelta(days=5)).strftime('%m/%d/%Y')
         # non-immediate feedback
         self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
                                         'periods': {'all': (begin, end)},
-                                        'status': 'publish'
+                                        'status': 'publish',
+                                        'problems': {'1.1': (2, 3), },
+                                        'feedback': 'non-immediate'
                                     })
+        self.student.wait.until(
+            expect.visibility_of_element_located(
+                (By.XPATH, '//div[contains(@class,"calendar-container")]')
+            )
+        )
         self.teacher.logout()
         self.student.login()
         self.student.select_course(appearance='physics')
         homework = self.student.driver.find_element(
             By.XPATH,
-            '//div[contains(@class,"homework") and ' +
-            'not(contains(@class,"deleted"))]' +
+            '//a[contains(@class,"homework")]' +
             '//span[contains(text,"%s")]' % assignment_name
         )
         self.student.driver.execute_script(
