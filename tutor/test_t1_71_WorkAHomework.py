@@ -1,4 +1,4 @@
-"""Tutor v1, Epic 71 - Work a homework."""
+"""Tutor v1, Epic 71 - Work a Homework."""
 
 import inspect
 import json
@@ -8,12 +8,15 @@ import unittest
 import datetime
 
 from pastasauce import PastaSauce, PastaDecorator
-from random import randint  # NOQA
-from selenium.webdriver.common.by import By  # NOQA
-from selenium.webdriver.support import expected_conditions as expect  # NOQA
+from random import randint
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as expect
+from staxing.assignment import Assignment
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 
+# select user types: Admin, ContentQA, Teacher, and/or Student
 from staxing.helper import Student, Teacher
 
 basic_test_env = json.dumps([{
@@ -25,16 +28,18 @@ basic_test_env = json.dumps([{
 BROWSERS = json.loads(os.getenv('BROWSERS', basic_test_env))
 TESTS = os.getenv(
     'CASELIST',
-    str([8362, 8363, 8364, 8365, 8366,
-         8367, 8368, 8369, 8370, 8371,
-         8372, 8373, 8374, 8375, 8376,
-         8377, 8378, 8379, 8380, 8381,
-         8382, 8383, 8384, 8385, 8386])
+    str([
+        8362, 8363, 8364, 8365, 8366,
+        8367, 8368, 8369, 8370, 8371,
+        8372, 8373, 8374, 8375, 8376,
+        8377, 8378, 8379, 8380, 8381,
+        8382, 8383, 8384, 8385, 8386
+    ])
 )
 
 
 @PastaDecorator.on_platforms(BROWSERS)
-class TestEpicName(unittest.TestCase):
+class TestWorkAHomework(unittest.TestCase):
     """T1.71 - Work a Homework."""
 
     def setUp(self):
@@ -42,39 +47,33 @@ class TestEpicName(unittest.TestCase):
         self.ps = PastaSauce()
         self.desired_capabilities['name'] = self.id()
         self.student = Student(
-            use_env_vars=True  # ,
-            # pasta_user=self.ps,
-            # capabilities=self.desired_capabilities
-        )
-        self.student = Student(
-            use_env_vars=True  # ,
+            use_env_vars=True,
             # pasta_user=self.ps,
             # capabilities=self.desired_capabilities
         )
         self.teacher = Teacher(
             existing_driver=self.student.driver,
-            username='teacher01',
-            password='password'
-            # use_env_vars=True#,
+            use_env_vars=True,
             # pasta_user=self.ps,
             # capabilities=self.desired_capabilities
         )
-        self.teacher.driver = self.student.driver
-        self.wait = self.student.wait
         self.teacher.login()
 
     def tearDown(self):
         """Test destructor."""
-        self.ps.update_job(job_id=str(self.student.driver.session_id),
-                           **self.ps.test_updates)
+        self.ps.update_job(
+            job_id=str(self.student.driver.session_id),
+            **self.ps.test_updates
+        )
         try:
+            self.teacher = None
             self.student.delete()
         except:
             pass
 
     # Case C8362 - 001 - Student | Start an open homework assignment
-    @pytest.mark.skipif(str(8362) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_start_an_open_homework_assignemnt_8362(self):
+    @pytest.mark.skipif(str(8362) not in TESTS, reason='Excluded')
+    def test_student_start_an_open_homework_assignment_8362(self):
         """Start an open homework assignment.
 
         Steps:
@@ -82,7 +81,7 @@ class TestEpicName(unittest.TestCase):
 
         Expected Result:
         The user is presented with the first question of the homework
-
+        assignment
         """
         self.ps.test_updates['name'] = 't1.71.001' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -95,7 +94,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -109,26 +108,29 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
-        self.ps.test_updates['passed'] = True
 
     # Case C8363 - 002 - Student | Hover over the information icon to view the
-    # assignemnt description
-    @pytest.mark.skipif(str(8363) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_hover_over_the_info_icon_to_view_description_8363(self):
-        """Hover over the information icon in the footer to view the description.
+    # description
+    @pytest.mark.skipif(str(8363) not in TESTS, reason='Excluded')
+    def test_student_hover_over_info_icon_to_view_the_description_8363(self):
+        """Hover over the info icon to view the assignment description.
 
         Steps:
-        Hover over the information icon in right corner of the footer
+        Hover the cursor over the information icon in right corner of the
+            footer
 
         Expected Result:
         The user is presented with the assignment description/instructions
@@ -144,7 +146,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -157,13 +159,16 @@ class TestEpicName(unittest.TestCase):
         self.student.login()
         self.student.select_course(appearance='physics')
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@class,"homework") and ' +
+            By.XPATH,
+            '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name)
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
-        icon = self.wait.until(
+        icon = self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH,
                  '//div[contains(@class,"homeowrk")]' +
@@ -173,11 +178,12 @@ class TestEpicName(unittest.TestCase):
         ActionChains(self.student.driver).move_to_element(icon).perform()
         self.student.driver.find_element(
             By.XPATH, '//div[contains(@id,"task-details-popover")]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8364 - 003 - Student | Navigate between questions using the
     # breadcrumbs
-    @pytest.mark.skipif(str(8364) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8364) not in TESTS, reason='Excluded')
     def test_student_navigate_between_questions_using_breadcrumbs_8364(self):
         """Navigate between questions using the breadcrumbs.
 
@@ -198,7 +204,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -214,12 +220,15 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH,
                  '//span[contains(@data-reactid,"breadcrumb-step-1")]')
@@ -227,12 +236,13 @@ class TestEpicName(unittest.TestCase):
         ).click()
         self.student.driver.find_element(
             By.XPATH, '//div[@data-question-number="2"]')
+
         self.ps.test_updates['passed'] = True
 
-    # Case C8365 - 004 - Student | Inputting a free response into a free
-    # response textblock activates the Answer button
-    @pytest.mark.skipif(str(8365) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_inputting_a_free_response_activates_the_button_8365(self):
+    # Case C8365 - 004 - Student | Inputting a free response activates the
+    # Answer button
+    @pytest.mark.skipif(str(8365) not in TESTS, reason='Excluded')
+    def test_student_inputting_free_response_activate_answer_button_8365(self):
         """Inputting a free response activates the Answer button.
 
         Steps:
@@ -253,7 +263,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -269,9 +279,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
         sections = self.student.driver.find_elements(
@@ -283,7 +296,7 @@ class TestEpicName(unittest.TestCase):
                     By.TAG_NAME, 'textarea')
                 for i in 'hello':
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.element_to_be_clickable(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -299,7 +312,7 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = True
 
     # Case C8366 - 005 - Student |  Submit a free response answer
-    @pytest.mark.skipif(str(8366) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8366) not in TESTS, reason='Excluded')
     def test_student_submit_a_free_response_answer_8366(self):
         """ Submit a free response answer.
 
@@ -322,7 +335,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -338,9 +351,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
         sections = self.student.driver.find_elements(
@@ -353,7 +369,7 @@ class TestEpicName(unittest.TestCase):
                     By.TAG_NAME, 'textarea')
                 for i in answer_text:
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.element_to_be_clickable(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -367,16 +383,18 @@ class TestEpicName(unittest.TestCase):
                 sections[count].click()
         self.student.driver.find_element(
             By.XPATH,
-            '//div[@class="free-response" and contains(text(),"' +
-            answer_text+'")]')
+            '//div[@class="free-response" and ' +
+            'contains(text(),"%s")]' % answer_text
+        )
         self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8367 - 006 - Student | Selecting a multiple choice answer activates
     # the Submit button
-    @pytest.mark.skipif(str(8367) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_seleting_multiple_choice_activates_the_button_6367(self):
+    @pytest.mark.skipif(str(8367) not in TESTS, reason='Excluded')
+    def test_student_seleting_multiple_choice_activates_submit_btn_8367(self):
         """Selecting a multiple choice answer activates the Submit button.
 
         Steps:
@@ -400,7 +418,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -416,26 +434,29 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response before mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -443,18 +464,21 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.element_to_be_clickable(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         )
+
         self.ps.test_updates['passed'] = True
 
     # Case C8368 - 007 - Student | Submit a multiple choice answer
-    @pytest.mark.skipif(str(8368) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8368) not in TESTS, reason='Excluded')
     def test_student_submit_A_multiple_choice_answer_8368(self):
         """Submit a multiple choice answer.
 
@@ -481,7 +505,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -497,32 +521,36 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         homework = self.student.driver.find_element(
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//i[contains(@class,"icon-homework")]')
+            '//i[contains(@class,"icon-homework")]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response before mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -530,10 +558,12 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
@@ -541,16 +571,17 @@ class TestEpicName(unittest.TestCase):
         # non immediate freedback goes straigt to the next question
         self.student.driver.find_element(
             By.XPATH, '//div[@data-question-number="2"]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8369 - 008 - Student | Verify the free response saved
-    @pytest.mark.skipif(str(8369) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8369) not in TESTS, reason='Excluded')
     def test_student_verify_the_free_response_saved_8369(self):
-        """Verify the free response saved after entering it into the assessment.
+        """Verify free response saved after entering it into the assessment.
 
         Steps:
         If the assessment has a free response text box,
-        enter a free response into the free response text box
+            enter a free response into the free response text box
         Click on the next breadcrumb to get to the next assessment
         Click back to the original assessment
 
@@ -568,7 +599,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -584,9 +615,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
@@ -615,7 +649,7 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = True
 
     # Case C8370 - 009 - Student | Verify the mutliple choice answer saved
-    @pytest.mark.skipif(str(8370) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8370) not in TESTS, reason='Excluded')
     def test_student_verify_the_multiple_choice_answer_saved_8370(self):
         """Verify the multiple choice answer saved.
 
@@ -638,7 +672,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -654,9 +688,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
@@ -669,7 +706,7 @@ class TestEpicName(unittest.TestCase):
                     By.TAG_NAME, 'textarea')
                 for i in 'hello':
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.element_to_be_clickable(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -681,7 +718,7 @@ class TestEpicName(unittest.TestCase):
                     print('no questions in this homework with free respnse')
                     raise Exception
                 sections[count].click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -690,25 +727,30 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
         # check that it saved
         sections[count+1].click()
         sections[count].click()
         self.student.driver.find_element(
-            By.XPATH, '//div[contains(@data-reactid,"option-0")]' +
-            '//div[contains(@class,"answer-checked")]')
+            By.XPATH,
+            '//div[contains(@data-reactid,"option-0")]' +
+            '//div[contains(@class,"answer-checked")]'
+        )
+
         self.ps.test_updates['passed'] = True
 
     # Case C8371 - 010 - Student | Verify the assignment progress changed
-    @pytest.mark.skipif(str(8371) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_verify_the_assignemnt_progress_changed_8371(self):
+    @pytest.mark.skipif(str(8371) not in TESTS, reason='Excluded')
+    def test_student_verify_the_assignment_progress_changed_8371(self):
         """Verify the assignment progress changed.
 
         Steps:
         If the assessment has a free response text box,
-        enter a free response into the free response text box
+            enter a free response into the free response text box
         Click "Answer"
         If the assessment has multiple choices, select a multiple choice answer
         Click "Submit"
@@ -716,7 +758,7 @@ class TestEpicName(unittest.TestCase):
 
         Expected Result:
         The user returns to dashboard
-        assignment progress shows the number of questions answered
+        Assignment progress shows the number of questions answered
         """
         self.ps.test_updates['name'] = 't1.71.010' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -729,7 +771,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -745,9 +787,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
@@ -763,7 +808,7 @@ class TestEpicName(unittest.TestCase):
                 answer_text = "hello"
                 for i in answer_text:
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.visibility_of_element_located(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -771,7 +816,7 @@ class TestEpicName(unittest.TestCase):
             except NoSuchElementException:
                 pass
             # answer the multiple choice  portion
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
@@ -779,36 +824,44 @@ class TestEpicName(unittest.TestCase):
             element = self.student.driver.find_element(
                 By.XPATH, '//div[@class="answer-letter"]')
             self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();', element)
+                'return arguments[0].scrollIntoView();',
+                element
+            )
             self.student.driver.execute_script('window.scrollBy(0, -150);')
             element.click()
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
         self.student.driver.execute_script('window.scrollTo(0,0)')
         self.student.driver.find_element(
-            By.XPATH, '//div[contains(@class,"course-name")]').click()
+            By.XPATH,
+            '//div[contains(@class,"course-name")]'
+        ).click()
         self.student.driver.find_element(
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"' +
-            str(stop_point) + '/' + str(len(sections)-1) + ' answered")]')
+
+            '//span[contains(text(),"%s/%s answered")]' %
+            (stop_point, len(sections - 1))
+        )
+
         self.ps.test_updates['passed'] = True
 
     # Case C8372 - 011 - Student | Answer all assessments in an assignment and
     # view the completion report
-    @pytest.mark.skipif(str(8372) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_answer_all_assesments_view_completion_report_8372(self):
-        """Answer all of the assessments and view the completion report.
+    @pytest.mark.skipif(str(8372) not in TESTS, reason='Excluded')
+    def test_student_answer_all_assignment_view_completion_report_8372(self):
+        """Answer all of the assessments in an assignment.
 
         Steps:
-        answer all assesments in an assignment
+        Answer all assesments in an assignment
 
         Expected Result:
-        The user is presented with the completion report
+        The user is presented with the completion report at the end of the
+        assignment
         """
         self.ps.test_updates['name'] = 't1.71.011' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -821,7 +874,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -837,9 +890,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
@@ -853,7 +909,7 @@ class TestEpicName(unittest.TestCase):
                 answer_text = "hello"
                 for i in answer_text:
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.visibility_of_element_located(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -861,7 +917,7 @@ class TestEpicName(unittest.TestCase):
             except NoSuchElementException:
                 pass
             # answer the multiple choice  portion
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
@@ -869,10 +925,12 @@ class TestEpicName(unittest.TestCase):
             element = self.student.driver.find_element(
                 By.XPATH, '//div[@class="answer-letter"]')
             self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();', element)
+                'return arguments[0].scrollIntoView();',
+                element
+            )
             self.student.driver.execute_script('window.scrollBy(0, -150);')
             element.click()
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
@@ -881,19 +939,20 @@ class TestEpicName(unittest.TestCase):
             By.XPATH, '//div[contains(@class,"completed-message")]')
         self.student.driver.find_element(
             By.XPATH, '//h1[contains(text(),"You are done")]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8373 - 012 - Student | Before the due date, change a mutliple
     # choice answer
-    @pytest.mark.skipif(str(8373) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8373) not in TESTS, reason='Excluded')
     def test_student_before_due_date_change_multiple_choice_answer_8373(self):
         """Before the due date, change a mutliple choice answer.
 
         Steps:
-        Click on a homework assignment on the list dashboard
-        (that does not have instant feedback)
+        Click on a homework assignment on the list dashboard (that does not
+            have instant feedback)
         If the assessment has a free response text box,
-        enter a free response into the free response text box
+            enter a free response into the free response text box
         Click "Answer"
         If the assessment has multiple choices, select a multiple choice answer
         Click "Submit"
@@ -917,7 +976,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -933,20 +992,23 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
@@ -954,7 +1016,7 @@ class TestEpicName(unittest.TestCase):
         except NoSuchElementException:
             pass
         # answer mc portion
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -962,10 +1024,12 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
@@ -973,17 +1037,22 @@ class TestEpicName(unittest.TestCase):
         # go back to dashboard and reopen homework
         self.student.driver.execute_script('window.scrollTo(0,0)')
         self.student.driver.find_element(
-            By.XPATH, '//div[contains(@class,"course-name")]').click()
+            By.XPATH,
+            '//div[contains(@class,"course-name")]'
+        ).click()
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@class,"homework") and ' +
+            By.XPATH,
+            '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
             '//i[contains(@class,"icon-homework")]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
         # reanswer mc portion
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -991,12 +1060,16 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH,
             '//div[contains(@class,"answers-answer") and ' +
-            'not(contains(@class,"checked"))]')
+            'not(contains(@class,"checked"))]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
@@ -1005,15 +1078,15 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = True
 
     # Case C8374 - 013 - Student | View the completion report and return to the
-    #  dashboard
-    @pytest.mark.skipif(str(8374) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_view_completion_report_and_return_to_dashboard_8374(self):
+    # dashboard
+    @pytest.mark.skipif(str(8374) not in TESTS, reason='Excluded')
+    def test_student_view_completion_report_return_to_the_dashboard_8374(self):
         """View the completion report and return to the dashboard.
 
         Steps:
         Click on a homework assignment on the list dashboard
         If the assessment has a free response text box
-        enter a free response into the free response text box
+            enter a free response into the free response text box
         Click "Answer"
         If the assessment has multiple choices, select a multiple choice answer
         Click "Submit"
@@ -1034,7 +1107,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback/ or immeditae feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1050,9 +1123,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
 
@@ -1067,12 +1143,13 @@ class TestEpicName(unittest.TestCase):
                 for i in answer_text:
                     element.send_keys(i)
                 self.student.driver.find_element(
-                    By.XPATH, '//button/span[contains(text(),"Answer")]'
+                    By.XPATH,
+                    '//button/span[contains(text(),"Answer")]'
                 ).click()
             except NoSuchElementException:
                 pass
             # answer the multiple choice  portion
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
@@ -1080,41 +1157,54 @@ class TestEpicName(unittest.TestCase):
             element = self.student.driver.find_element(
                 By.XPATH, '//div[@class="answer-letter"]')
             self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();', element)
+                'return arguments[0].scrollIntoView();',
+                element
+            )
+
             self.student.driver.execute_script('window.scrollBy(0, -150);')
             element.click()
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
             ).click()
+            # this is determined in making assignemnt now!
+            try:
+                # only click next question for assignemtns with immediate
+                # feedback
+                self.student.driver.find_element(
+                    By.XPATH,
+                    '//button/span[contains(text(),"Next Question")]'
+                ).click()
+            except:
+                pass
         self.student.driver.find_element(
             By.XPATH, '//div[contains(@class,"completed-message")]')
         self.student.driver.find_element(
             By.XPATH, "//a[contains(text(),'Back to Dashboard')]").click()
-        assert('list' in self.student.current_url()),\
+        assert('list' in self.student.current_url()), \
             'Not back at dashboard'
+
         self.ps.test_updates['passed'] = True
 
-    # is this really needed, can it just be added to 011
-    # Case C8375 - 014 - Student | A completed homework shows "You are done"
-    # in completion report
-    @pytest.mark.skipif(str(8375) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_shows_you_are_done_in_the_completion_report_8375(self):
-        """A completed homework shows "You are done" in the completion report.
+    # Case C8375 - 014 - Student | A completed homework shows "You are done" in
+    # completion report
+    @pytest.mark.skipif(str(8375) not in TESTS, reason='Excluded')
+    def test_student_a_shows_you_are_done_in_the_completion_report_8375(self):
+        """Completed homework shows "You are done" in the completion report.
 
         Steps:
         Click on a homework assignment on the list dashboard
         If the assessment has a free response text box,
-        enter a free response into the free response text box
+            enter a free response into the free response text box
         Click "Answer"
         If the assessment has multiple choices, select a multiple choice answer
         Click "Submit"
         Continue answering all assessments
 
         Expected Result:
-        The user is presented with the completion report
-        that shows "You are done"
+        The user is presented with the completion report that shows "You are
+        done"
         """
         self.ps.test_updates['name'] = 't1.71.014' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -1159,7 +1249,7 @@ class TestEpicName(unittest.TestCase):
                 answer_text = "hello"
                 for i in answer_text:
                     element.send_keys(i)
-                self.wait.until(
+                self.student.wait.until(
                     expect.visibility_of_element_located(
                         (By.XPATH, '//button/span[contains(text(),"Answer")]')
                     )
@@ -1167,7 +1257,7 @@ class TestEpicName(unittest.TestCase):
             except NoSuchElementException:
                 pass
                 # answer the multiple choice  portion
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
@@ -1178,7 +1268,7 @@ class TestEpicName(unittest.TestCase):
                 'return arguments[0].scrollIntoView();', element)
             self.student.driver.execute_script('window.scrollBy(0, -150);')
             element.click()
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
@@ -1190,10 +1280,10 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = True
 
     # Case C8376 - 015 - Student | A completed homework should show X/X
-    # answered in the dashboard progrees column
-    @pytest.mark.skipif(str(8376) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_completed_homework_shows_x_of_x_in_dashbaord_8376(self):
-        """A completed homework should show X/X answered in the dashboard
+    # answered in the dashboard
+    @pytest.mark.skipif(str(8376) not in TESTS, reason='Excluded')
+    def test_student_completed_homework_shows_x_out_of_x_dashbaord_8376(self):
+        """Completed homework shows X/X answered in the dashboard progress.
 
         Steps:
         answer all assessments in a homework
@@ -1201,8 +1291,8 @@ class TestEpicName(unittest.TestCase):
 
         Expected Result:
         The user is returned to the dashboard.
-        The completed homework shows X/X answered
-        in the dashboard progress column.
+        The completed homework shows X/X answered in the dashboard progress
+        column.
         """
         self.ps.test_updates['name'] = 't1.71.015' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -1214,7 +1304,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1230,9 +1320,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -80);')
         homework.click()
         sections = self.student.driver.find_elements(
@@ -1245,12 +1338,13 @@ class TestEpicName(unittest.TestCase):
                 for i in answer_text:
                     element.send_keys(i)
                 self.student.driver.find_element(
-                    By.XPATH, '//button/span[contains(text(),"Answer")]'
+                    By.XPATH,
+                    '//button/span[contains(text(),"Answer")]'
                 ).click()
             except NoSuchElementException:
                 pass
             # answer the multiple choice  portion
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//div[contains(@class,"question-stem")]')
                 )
@@ -1258,10 +1352,13 @@ class TestEpicName(unittest.TestCase):
             element = self.student.driver.find_element(
                 By.XPATH, '//div[@class="answer-letter"]')
             self.student.driver.execute_script(
-                'return arguments[0].scrollIntoView();', element)
+                'return arguments[0].scrollIntoView();',
+                element
+            )
+
             self.student.driver.execute_script('window.scrollBy(0, -150);')
             element.click()
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Submit")]')
                 )
@@ -1272,69 +1369,69 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"' + str(len(sections)-1) +
-            '/' + str(len(sections)-1) + ' answered")]')
+            '//span[contains(text(),"%s/%s answered")]' %
+            (len(sections) - 1, len(sections) - 1)
+        )
 
         self.ps.test_updates['passed'] = True
 
-    # # how to test this if it only happens sometimes?
-    # # Case C8377 - 016 - Student | A homework may have a Review assessment
-    # @pytest.mark.skipif(str(8377) not in TESTS, reason='Excluded')  # NOQA
-    # def test_student_a_homework_may_have_a_review_assesment_8377(self):
-    #     """ A homework may have a Review assessment.
+    # Case C8377 - 016 - Student | A homework may have a Review assessment
+    @pytest.mark.skipif(str(8377) not in TESTS, reason='Excluded')
+    def test_student_a_homework_may_have_a_review_assesment_8377(self):
+        """A homework may have a Review assessment.
 
-    #     Steps:
+        Steps:
+        Click on a homework assignment on the list dashboard
+        If the assessment has a free response text box,
+            enter a free response into the free response text box
+        Click "Answer"
+        If the assessment has multiple choices, select a multiple choice answer
+        Click "Submit"
+        Continue answering all assessments
 
-    #     Click on a homework assignment on the list dashboard
-    #     If the assessment has a free response text box,
-    #     enter a free response into the free response text box
-    #     Click "Answer"
-    #     If the assessment has multiple choices, select an answer
-    #     Click "Submit"
-    #     Continue answering all assessments
+        Expected Result:
+        A homework may have a Review assessment toward the end
+        """
+        self.ps.test_updates['name'] = 't1.71.016' \
+            + inspect.currentframe().f_code.co_name[4:]
+        self.ps.test_updates['tags'] = ['t1', 't1.71', 't1.71.016', '8377']
+        self.ps.test_updates['passed'] = False
 
-    #     Expected Result:
-    #     A homework may have a Review assessment toward the end
-    #     """
-    #     self.ps.test_updates['name'] = 't1.71.016' \
-    #         + inspect.currentframe().f_code.co_name[4:]
-    #     self.ps.test_updates['tags'] = ['t1', 't1.71', 't1.71.016', '8377']
-    #     self.ps.test_updates['passed'] = False
+        # Test steps and verification assertions
+        raise NotImplementedError(inspect.currentframe().f_code.co_name)
 
-    #     # Test steps and verification assertions
+        self.ps.test_updates['passed'] = True
 
-    #     self.ps.test_updates['passed'] = True
-
-    # # how to test this if it only happens sometimes?
-    # # Case C8378 - 017 - Student | A homework may have a Personalized
+    # Case C8378 - 017 - Student | A homework may have a Personalized
     # assessment
-    # @pytest.mark.skipif(str(8378) not in TESTS, reason='Excluded')  # NOQA
-    # def test_student_a_homework_may_have_a_personalized_question_8378(self):
-    #     """A homework may have a Personalized assessment.
+    @pytest.mark.skipif(str(8378) not in TESTS, reason='Excluded')
+    def test_student_a_homework_may_have_a_personalized_question_8378(self):
+        """A homework may have a Personalized assessment.
 
-    #     Steps:
-    #     Click on a homework assignment on the list dashboard
-    #     If the assessment has a free response text box,
-    #     enter a free response into the free response text box
-    #     Click "Answer"
-    #     If the assessment has multiple choices, select an answer
-    #     Click "Submit"
-    #     Continue answering all assessments
+        Steps:
+        Click on a homework assignment on the list dashboard
+        If the assessment has a free response text box,
+            enter a free response into the free response text box
+        Click "Answer"
+        If the assessment has multiple choices, select a multiple choice answer
+        Click "Submit"
+        Continue answering all assessments
 
-    #     Expected Result:
-    #     A homework may have a Personalized assessment toward the end
-    #     """
-    #     self.ps.test_updates['name'] = 't1.71.017' \
-    #         + inspect.currentframe().f_code.co_name[4:]
-    #     self.ps.test_updates['tags'] = ['t1', 't1.71', 't1.71.017', '8378']
-    #     self.ps.test_updates['passed'] = False
+        Expected Result:
+        A homework may have a Personalized assessment toward the end
+        """
+        self.ps.test_updates['name'] = 't1.71.017' \
+            + inspect.currentframe().f_code.co_name[4:]
+        self.ps.test_updates['tags'] = ['t1', 't1.71', 't1.71.017', '8378']
+        self.ps.test_updates['passed'] = False
 
-    #     # Test steps and verification assertions
+        # Test steps and verification assertions
+        raise NotImplementedError(inspect.currentframe().f_code.co_name)
 
-    #     self.ps.test_updates['passed'] = True
+        self.ps.test_updates['passed'] = True
 
     # Case C8379 - 018 - Student | Start a late homework assignment
-    @pytest.mark.skipif(str(8379) not in TESTS, reason='Excluded')  # NOQA
+    @pytest.mark.skipif(str(8379) not in TESTS, reason='Excluded')
     def test_student_start_a_late_homework_assignment_8379(self):
         """A homework may have a Personalized assessment.
 
@@ -1351,23 +1448,27 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        # how to make a past due assignemnt, need to assume that one exists?
-        self.wait.until(
+        # how to make a past due assignment, need to assume that one exists?
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@aria-hidden,"false")]' +
+            By.XPATH,
+            '//div[contains(@aria-hidden,"false")]' +
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"0/")]')
+            '//span[contains(text(),"0/")]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1376,8 +1477,8 @@ class TestEpicName(unittest.TestCase):
 
     # Case C8380 - 019 - Student | Submit a multiple choice answer on a late
     # homework
-    @pytest.mark.skipif(str(8380) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_submit_a_multiple_choice_on_a_late_homework_8380(self):
+    @pytest.mark.skipif(str(8380) not in TESTS, reason='Excluded')
+    def test_stuednt_submit_multiple_choice_answer_on_late_homework_8380(self):
         """Submit a multiple choice answer.
 
         Steps:
@@ -1397,42 +1498,46 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        # how to make a past due assignemnt, need to assume that one exists?
-        self.wait.until(
+        # how to make a past due assignment, need to assume that one exists?
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@aria-hidden,"false")]' +
+            By.XPATH,
+            '//div[contains(@aria-hidden,"false")]' +
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"0/")]')
+            '//span[contains(text(),"0/")]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1440,10 +1545,12 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
@@ -1453,11 +1560,11 @@ class TestEpicName(unittest.TestCase):
 
         self.ps.test_updates['passed'] = True
 
-    # Case C8381 - 020 - Student | Answer feedback is presented for a
-    # late homework
-    @pytest.mark.skipif(str(8381) not in TESTS, reason='Excluded')  # NOQA
+    # Case C8381 - 020 - Student | Answer feedback is presented for a late
+    # homework
+    @pytest.mark.skipif(str(8381) not in TESTS, reason='Excluded')
     def test_student_answer_feedback_presented_for_a_late_homework_8381(self):
-        """Answer feedback is presented on a late assignemnt.
+        """Answer feedback is presented on a late assignment.
 
         Steps:
         Click on the "All Past Work" tab on the dashboard
@@ -1468,8 +1575,7 @@ class TestEpicName(unittest.TestCase):
         Click "Submit"
 
         Expected Result:
-        The multiple choice answer is submitted
-        answer feedback is presented
+        The multiple choice answer is submitted and answer feedback is shown
         """
         self.ps.test_updates['name'] = 't1.71.020' \
             + inspect.currentframe().f_code.co_name[4:]
@@ -1477,42 +1583,46 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        # how to make a late assignemnt, assuse one exisits?
-        self.wait.until(
+        # how to make a late assignment, assuse one exisits?
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@aria-hidden,"false")]' +
+            By.XPATH,
+            '//div[contains(@aria-hidden,"false")]' +
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"0/")]')
+            '//span[contains(text(),"0/")]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1520,23 +1630,27 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
         self.student.driver.find_element(
             By.XPATH, '//div[contains(@class,"question-feedback-content")]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8382 - 021 - Student | Correctness is displayed in the breadcrumbs
     # for a late homework
-    @pytest.mark.skipif(str(8382) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_corectness_in_breadcrumbs_for_late_homework_8382(self):
-        """Correctness is displayed in the breadcrumbs for a late homework
+    @pytest.mark.skipif(str(8382) not in TESTS, reason='Excluded')
+    def test_student_corectness_display_in_breadcrumbs_for_late_hw_8382(self):
+        """Correctness displayed in the breadcrumbs for a late homework.
 
         Steps:
         Click on the "All Past Work" tab on the dashboard
@@ -1555,42 +1669,46 @@ class TestEpicName(unittest.TestCase):
         self.ps.test_updates['passed'] = False
 
         # Test steps and verification assertions
-        # how to create a late hw? (assume there is already one there?)
-        self.wait.until(
+        # how to create a late hw?
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//a[contains(text(),"All Past Work")]')
             )
         ).click()
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@aria-hidden,"false")]' +
+            By.XPATH,
+            '//div[contains(@aria-hidden,"false")]' +
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text(),"0/")]')
+            '//span[contains(text(),"0/")]'
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1598,23 +1716,29 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
         self.student.driver.find_element(
-            By.XPATH, '//span[contains(@class,"breadcrumb")]' +
-            '//i[contains(@class,"correct") or contains(@class,"incorrect")]')
+            By.XPATH,
+            '//span[contains(@class,"breadcrumb")]' +
+            '//i[contains(@class,"correct") or contains(@class,"incorrect")]'
+        )
+
         self.ps.test_updates['passed'] = True
 
     # Case C8383 - 022 - Student | Start an open homework assignment with
     # immediate feedback
-    @pytest.mark.skipif(str(8383) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_start_an_open_homework_with_immediate_feedback_8383(self):
+    @pytest.mark.skipif(str(8383) not in TESTS, reason='Excluded')
+    def test_student_start_open_homework_with_immediate_feedback_8383(self):
         """Start an open homework assignment with immediate feedback.
 
         Steps:
@@ -1635,7 +1759,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1651,9 +1775,12 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
@@ -1661,9 +1788,9 @@ class TestEpicName(unittest.TestCase):
 
     # Case C8384 - 023 - Student | Submit a multiple choice answer for a
     # homework with immediate feedback
-    @pytest.mark.skipif(str(8384) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_submit_mc_for_homework_with_immediate_feedback_8384(self):
-        """Submit a multiple choice answer for hoemwork with immediate feedback
+    @pytest.mark.skipif(str(8384) not in TESTS, reason='Excluded')
+    def test_student_submit_mc_ans_for_hw_with_immediate_feedback_8384(self):
+        """Submit a multiple choice answer for hoemwork with imediate feedback
 
         Steps:
         Click on a homework assignment on the list dashboard
@@ -1686,7 +1813,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # non-immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1702,32 +1829,35 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1735,22 +1865,26 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
         self.student.driver.find_element(
             By.XPATH, '//button/span[contains(text(),"Next Question")]')
+
         self.ps.test_updates['passed'] = True
 
     # Case C8385 - 024 - Student | Answer feedback is presented for a homework
     # with immediate feedback
-    @pytest.mark.skipif(str(8385) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_feedback_presented_for_homework_with_immediate_8385(self):
+    @pytest.mark.skipif(str(8385) not in TESTS, reason='Excluded')
+    def test_student_ans_fb_shown_for_hw_with_immediate_feedback_8385(self):
         """Answer feedback is presented for a homework with immediate feedback.
 
         Steps:
@@ -1774,7 +1908,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1790,32 +1924,35 @@ class TestEpicName(unittest.TestCase):
             By.XPATH,
             '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1823,23 +1960,27 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
         self.student.driver.find_element(
             By.XPATH, '//div[contains(@class,"question-feedback-content")]')
+
         self.ps.test_updates['passed'] = True
 
-    # Case C8386 - 025 - Student | Correctness displayed in the breadcrumbs
-    # for a homework with immediate feedback
-    @pytest.mark.skipif(str(8386) not in TESTS, reason='Excluded')  # NOQA
-    def test_student_correctness_in_breadcrumbs_for_hw_immediate_8386(self):
-        """Correctness displayed in breadcrumbs for hw with immediate feedback
+    # Case C8386 - 025 - Student | Correctness displayed in the breadcrumbs for
+    # a homework with immediate feedback
+    @pytest.mark.skipif(str(8386) not in TESTS, reason='Excluded')
+    def test_student_correct_shown_bcr_for_hw_with_immediate_fb_8386(self):
+        """Correctness shown in the breadcrumbs.
 
         Steps:
         Click on a homework assignment on the list dashboard
@@ -1862,7 +2003,7 @@ class TestEpicName(unittest.TestCase):
         begin = (today + datetime.timedelta(days=0)).strftime('%m/%d/%Y')
         end = (today + datetime.timedelta(days=3)).strftime('%m/%d/%Y')
         # immediate feedback
-        self.teacher.add_assignment(assignemnt='homework',
+        self.teacher.add_assignment(assignment='homework',
                                     args={
                                         'title': assignment_name,
                                         'description': 'description',
@@ -1875,34 +2016,38 @@ class TestEpicName(unittest.TestCase):
         self.student.login()
         self.student.select_course(appearance='physics')
         homework = self.student.driver.find_element(
-            By.XPATH, '//div[contains(@class,"homework") and ' +
+            By.XPATH,
+            '//div[contains(@class,"homework") and ' +
             'not(contains(@class,"deleted"))]' +
-            '//span[contains(text,"'+assignment_name+'")]')
+            '//span[contains(text,"%s")]' % assignment_name
+        )
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', homework)
+            'return arguments[0].scrollIntoView();',
+            homework
+        )
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         ActionChains(self.student.driver).move_to_element(homework).perform()
         homework.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
         )
         try:
-            # if the question is two part must answer free response first
+            # if the question is two part must answer free response to get mc
             element = self.student.driver.find_element(
                 By.TAG_NAME, 'textarea')
             answer_text = "hello"
             for i in answer_text:
                 element.send_keys(i)
-            self.wait.until(
+            self.student.wait.until(
                 expect.visibility_of_element_located(
                     (By.XPATH, '//button/span[contains(text(),"Answer")]')
                 )
             ).click()
         except NoSuchElementException:
             pass
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//div[contains(@class,"question-stem")]')
             )
@@ -1910,15 +2055,21 @@ class TestEpicName(unittest.TestCase):
         element = self.student.driver.find_element(
             By.XPATH, '//div[@class="answer-letter"]')
         self.student.driver.execute_script(
-            'return arguments[0].scrollIntoView();', element)
+            'return arguments[0].scrollIntoView();',
+            element
+        )
+
         self.student.driver.execute_script('window.scrollBy(0, -150);')
         element.click()
-        self.wait.until(
+        self.student.wait.until(
             expect.visibility_of_element_located(
                 (By.XPATH, '//button/span[contains(text(),"Submit")]')
             )
         ).click()
         self.student.driver.find_element(
-            By.XPATH, '//span[contains(@class,"breadcrumb")]' +
-            '//i[contains(@class,"correct") or contains(@class,"incorrect")]')
+            By.XPATH,
+            '//span[contains(@class,"breadcrumb")]' +
+            '//i[contains(@class,"correct") or contains(@class,"incorrect")]'
+        )
+
         self.ps.test_updates['passed'] = True
