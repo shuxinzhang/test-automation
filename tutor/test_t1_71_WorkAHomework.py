@@ -58,7 +58,7 @@ class TestWorkAHomework(unittest.TestCase):
             # capabilities=self.desired_capabilities
         )
         self.teacher.login()
-        self.teacher.select_course(appearance='physics')
+        self.teacher.select_course(appearance='college_physics')
 
     def tearDown(self):
         """Test destructor."""
@@ -111,7 +111,7 @@ class TestWorkAHomework(unittest.TestCase):
         )
         self.teacher.logout()
         self.student.login()
-        self.student.select_course(appearance='physics')
+        self.student.select_course(appearance='college_physics')
         homework = self.student.find(
             By.XPATH,
             '//a[contains(@class,"homework")]' +
